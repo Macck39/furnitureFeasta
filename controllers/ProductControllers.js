@@ -4,21 +4,22 @@ import ErrorHandler from "../utils/error.js";
 import { getDataUri } from "../utils/feature.js";
 import cloudinary from 'cloudinary'
 import { Category } from "../models/category.js";
+import { Subcategory } from "../models/category.js";
 
 
 //! get all products 
 export const getAllProducts = asyncError(async (req, res, next) => {
 
   //! SEARCH AND FILTER
-  const { keyword, category } = req.query;
+  // const { keyword, category } = req.query;
 
   // if macbook you are searching and types ook even that it will display
   const products = await Product.find({
-    name: {
-      $regex: keyword ? keyword : "",
-      $options: 'i', // case insensitive
-    },
-    category: category ? category : undefined,
+    // name: {
+    //   $regex: keyword ? keyword : "",
+    //   $options: 'i', // case insensitive
+    // },
+    // category: category ? category : undefined,
   });
 
 
@@ -32,7 +33,7 @@ export const getAllProducts = asyncError(async (req, res, next) => {
 
 //! product Details
 export const getProductDetails = asyncError(async (req, res, next) => {
-  const product = await Product.findById(req.params.id).populate("category");
+  const product = await Product.findById(req.params.id).populate("category").populate('subcategory');
 
   if (!product) return next(new ErrorHandler("Product not Found!", 400));
 
@@ -195,7 +196,7 @@ export const addCategory = asyncError(async (req, res, next) => {
 });
 
 export const getAllCategories = asyncError(async (req, res, next) => {
-  const categories = await Category.find({});
+  const categories = await Category.find({}).populate('subcategories');
 
   res.status(200).json({
     success: true,
@@ -208,7 +209,6 @@ export const deleteCategory = asyncError(async (req, res, next) => {
   const category = await Category.findById(req.params.id);
   if (!category) return next(new ErrorHandler("Category not found!", 404));
 
-  //!
 
   const products = await Product.find({ category: category._id });
 
@@ -218,14 +218,74 @@ export const deleteCategory = asyncError(async (req, res, next) => {
     await product.save();
   }
 
-  console.log(`${category} deleted successfully!`);
-
   await Category.deleteOne(category);
 
   res.status(200).json({
     success: true,
     message: " Category deleted Successfully",
   });
+});
+
+//! ADD SUBCATEGORY 
+export const addSubCategories = asyncError(async (req, res, next) => {
+  const { categoryId, subCategory } = req.body;
+  if (!categoryId) {
+     return next(new ErrorHandler("Category Id is required!", 404));
+  }
+  const foundCategory = await Category.findById(categoryId);
+  if (!foundCategory) {
+    return res.status(404).json({ message: "Category not found." });
+  }
+
+   // Create the subcategory
+    const subcategory = await Subcategory.create({
+      subcategory : subCategory,
+      category: categoryId // Assign the categoryId to the subcategory
+    });
+   await subcategory.save();
+
+  res.status(201).json({
+    success: true,
+    message: "Category Created Successfully!",
+  });
+});
+
+
+//! GET SUBCATEGORIES BASED ON CATEGORY 
+export const getSubcategoriesByCategory = asyncError(async (req, res, next) => {
+  const categoryId = req.params.categoryId;
+  if (!categoryId) {
+     return next(new ErrorHandler("Category Id is required!", 404));
+  }
+
+  const subcategories = await Subcategory.find({ category: categoryId });
+  if (subcategories.length === 0) {
+    return next(new ErrorHandler("subcategory  not found!", 404));
+  }
+
+  res.status(201).json({
+    success: true,
+    data: subcategories,
+  });
+});
+
+//! DELETE SUB-CATEGORY (FROM CATEGORY AND PRODUCT ALSO )
+export const deleteSubcategory = asyncError(async (req, res, next) => {
+  const subcategoryId = req.params.subcategoryId;
+  const subcategory = await Subcategory.findById(subcategoryId);
+  if (!subcategory) {
+    next(new ErrorHandler("subcategory  not found!", 404));
+  }
+
+      // Delete the subcategory and its references from categories and products
+      await Promise.all([
+        Subcategory.findByIdAndDelete(subcategoryId),
+        Category.updateMany({ subcategories: subcategoryId }, { $pull: { subcategories: subcategoryId } }),
+        Product.updateMany({ subcategory: subcategoryId }, { $unset: { subcategory: 1 } })
+      ]);
+  
+      res.status(200).json({ message: "Subcategory deleted successfully." });
+
 });
 
 

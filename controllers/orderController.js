@@ -50,6 +50,7 @@ export const createOrder = asyncError(async (req, res, next) => {
 //! GET MY ORDER
 
 export const getMyOrders = asyncError(async (req, res, next) => {
+    console.log("USER ID IN ORDER >>>", req.user._id)
     // my order using user id
     const orders = await Order.find({ user: req.user._id });
     // console.log("order", orders);

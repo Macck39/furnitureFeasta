@@ -9,6 +9,9 @@ import cloudinary from "cloudinary"
 import productRouter from './routes/productRoutes.js';
 import orderRouter from './routes/orderRoutes.js';
 import cors from 'cors';
+import addressRouter from './routes/addressRoutes.js';
+import testimonialRouter from './routes/testimonialRoutes.js';
+import WishlistRouter from './routes/wishlistRouter.js';
 
 dotenv.config({
     path :'./data/.env'
@@ -32,7 +35,6 @@ const PORT = process.env.PORT;
 async function connectDB(){
   try{
     const { connection } = await mongoose.connect(process.env.MONGOURL)
-    console.log("hello")
     console.log(`db connected at ${connection.port}`)
   } catch(err){
     console.log(`something err in connecting db -- ${err}`)
@@ -53,6 +55,9 @@ cloudinary.v2.config({
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/product', productRouter)
 app.use('/api/v1/order', orderRouter)
+app.use('/api/v1/address', addressRouter)
+app.use('/api/v1/testimonial', testimonialRouter)
+app.use('/api/v1/wishlist', WishlistRouter)
 
 
 

@@ -1,5 +1,6 @@
 
 import mongoose from "mongoose";
+import { User } from "./userModal.js";
 
 const schema = new mongoose.Schema({
   shippingInfo: {
@@ -48,7 +49,7 @@ const schema = new mongoose.Schema({
   ],
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: User,
     required: true,
   },
 

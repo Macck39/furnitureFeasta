@@ -79,6 +79,5 @@ const token = userSchema.methods.generateToken = function () {
   });
 };
 
-console.log("token in user model", token)
 // user model
 export const User = mongoose.model("users", userSchema);

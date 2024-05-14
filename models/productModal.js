@@ -29,6 +29,11 @@ name: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
+  subcategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subcategory',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now,
